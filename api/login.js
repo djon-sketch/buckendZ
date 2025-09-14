@@ -1,27 +1,19 @@
-// api/login.js
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
 
-const USERS_PATH = path.join(process.cwd(), 'users.json');
+export default function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method tidak diizinkan" });
+  }
 
-function readUsers(){
-  try {
-    return JSON.parse(fs.readFileSync(USERS_PATH, 'utf8'));
-  } catch (e) {
-    return {};
+  const filePath = path.join(process.cwd(), "users.json");
+  const users = JSON.parse(fs.readFileSync(filePath, "utf8"));
+
+  const { username, password } = req.body;
+
+  if (users[username] && users[username] === password) {
+    return res.status(200).json({ ok: true, message: "Login sukses ✅" });
+  } else {
+    return res.status(401).json({ ok: false, message: "Login gagal ❌" });
   }
 }
-
-module.exports = (req, res) => {
-  if (req.method !== 'POST') return res.status(405).end();
-  const { username, password } = req.body || {};
-  if (!username || !password) return res.status(400).json({ message: 'Missing fields' });
-
-  const users = readUsers();
-  if (users[username] && users[username] === password) {
-    // token = base64 username (very simple)
-    const token = Buffer.from(username).toString('base64');
-    return res.status(200).json({ token });
-  }
-  return res.status(401).json({ message: 'Invalid credentials' });
-};
