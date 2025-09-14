@@ -1,10 +1,1 @@
-{
-  "rewrites": [
-    { "source": "/admin-login", "destination": "/admin-login.html" },
-    { "source": "/admin-panel", "destination": "/admin-panel.html" }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/api/(.*)", "dest": "/api/$1.js" }
-  ]
-}
+
