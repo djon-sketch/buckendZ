@@ -1,59 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Daftar Stok — JBAllGameByLungzzAndAmbaJb</title>
-  <link rel="stylesheet" href="/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Stok JB By Lungzz And AmbaJB</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="site-header">
-    <h1>Stock</h1>
+  <header class="hero">
+    <h1>Stok JB</h1>
+    <p>Temukan produk terbaik dengan harga terbaik!</p>
   </header>
 
-  <main class="wrap">
-    <h2 class="page-title">📦 Stok Terbaru</h2>
-    <div id="stok-container" class="news-list"></div>
+  <main>
+    <section class="stok-container">
+      <h2>Daftar Produk</h2>
+      <div id="stok-list" class="stok-grid"></div>
+    </section>
   </main>
 
-  <footer class="footer">
-    <small>By Lungzz</small>
+  <footer>
+    <p>&copy; 2025  JB Roblox All Game By Lungzz And AmbaJB • Semua Hak Dilindungi</p>
   </footer>
 
   <script>
-    async function loadStok() {
-      try {
-        const res = await fetch('/api/stok');
-        const data = await res.json();
-        const cont = document.getElementById('stok-container');
-        cont.innerHTML = '';
-        if (!data.length) {
-          cont.innerHTML = '<p class="muted">Belum ada stok.</p>';
-          return;
-        }
-        data.forEach(s => {
-          const card = document.createElement('article');
-          card.className = 'news-card';
-          card.innerHTML = `
-            <h3 class="news-title">${escapeHtml(s.nama)}</h3>
-            <p class="news-meta">Harga: Rp${numberWithCommas(s.harga)} • Stok: ${s.stock ?? 0}</p>
-            <p class="news-desc">${escapeHtml(s.deskripsi || '')}</p>
-            <p class="news-wa">📲 <a href="https://wa.me/${encodeURIComponent(s.wa || '')}" target="_blank" rel="noopener">Chat via WhatsApp</a></p>
-          `;
-          cont.appendChild(card);
-        });
-      } catch (e) {
-        console.error(e);
-        document.getElementById('stok-container').innerText = 'Gagal load stok.';
+    async function loadStok(){
+      const res = await fetch('/api/stok');
+      const data = await res.json();
+      const list = document.getElementById('stok-list');
+      list.innerHTML = '';
+      if(!data.length){
+        list.innerHTML = '<p>Belum ada produk tersedia.</p>';
+        return;
       }
+      data.forEach(p=>{
+        const card = document.createElement('div');
+        card.className = 'stok-card';
+        card.innerHTML = `
+          <h3>${p.nama}</h3>
+          <p>Rp${p.harga} • Stok: ${p.stock}</p>
+          <p>${p.deskripsi||''}</p>
+          ${p.wa ? `<a href="https://wa.me/${p.wa}" target="_blank" class="btn">Hubungi WA</a>` : ''}
+        `;
+        list.appendChild(card);
+      });
     }
-
-    function escapeHtml(s){
-      if (!s) return '';
-      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
-    function numberWithCommas(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
-
     loadStok();
   </script>
 </body>
