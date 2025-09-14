@@ -1,46 +1,40 @@
-// api/users.js
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
 
-const USERS_PATH = path.join(process.cwd(), 'users.json');
+const filePath = path.join(process.cwd(), "users.json");
 
-function readUsers(){
-  try { return JSON.parse(fs.readFileSync(USERS_PATH,'utf8')); } catch(e) { return {}; }
-}
-function writeUsers(u){ fs.writeFileSync(USERS_PATH, JSON.stringify(u, null, 2), 'utf8'); }
-function authFromReq(req){
-  const h = (req.headers.authorization||'').split(' ');
-  if (h[0] !== 'Bearer' || !h[1]) return null;
-  try { return Buffer.from(h[1], 'base64').toString('utf8'); } catch(e){ return null; }
-}
+export default function handler(req, res) {
+  const users = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-module.exports = (req, res) => {
-  try {
-    if (req.method === 'GET') {
-      // return users list only if token valid
-      const u = authFromReq(req);
-      const users = readUsers();
-      if (!u || !users[u]) return res.status(401).json({ message: 'Unauthorized' });
-      return res.status(200).json(users);
-    }
-
-    if (req.method === 'POST') {
-      // add user (requires auth)
-      const authUser = authFromReq(req);
-      const users = readUsers();
-      if (!authUser || !users[authUser]) return res.status(401).json({ message: 'Unauthorized' });
-
-      const { user, pass } = req.body || {};
-      if (!user || !pass) return res.status(400).json({ message: 'Missing fields' });
-      if (users[user]) return res.status(400).json({ message: 'User exists' });
-      users[user] = pass; // plaintext as requested
-      writeUsers(users);
-      return res.status(200).json({ message: 'User added' });
-    }
-
-    return res.status(405).json({ message: 'Method not allowed' });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ message: 'Server error' });
+  if (req.method === "GET") {
+    return res.status(200).json(users);
   }
-};
+
+  if (req.method === "POST") {
+    const { user, pass } = req.body;
+    if (!user || !pass) {
+      return res.status(400).json({ message: "Username dan password wajib diisi" });
+    }
+
+    if (users[user]) {
+      return res.status(400).json({ message: "User sudah ada!" });
+    }
+
+    users[user] = pass;
+    fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+    return res.status(201).json({ message: "User berhasil ditambah ✅" });
+  }
+
+  if (req.method === "DELETE") {
+    const { user } = req.body;
+    if (!users[user]) {
+      return res.status(404).json({ message: "User tidak ditemukan" });
+    }
+
+    delete users[user];
+    fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+    return res.status(200).json({ message: "User berhasil dihapus 🗑️" });
+  }
+
+  res.status(405).json({ message: "Method tidak diizinkan" });
+}
