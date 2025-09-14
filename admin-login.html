@@ -38,7 +38,9 @@
         });
         const j = await r.json();
         if (r.ok && j.token) {
+          // simpan token di localStorage
           localStorage.setItem('admin_token', j.token);
+          localStorage.setItem('admin_user', u);
           window.location.href = '/admin-panel.html';
         } else {
           document.getElementById('msg').innerText = j.message || 'Login gagal';
