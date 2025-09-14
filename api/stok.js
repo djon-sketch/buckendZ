@@ -2,13 +2,13 @@ import fs from 'fs';
 
 export default function handler(req, res) {
   const stokPath = 'stok.json';
+  const auth = req.headers.authorization;
 
   if (req.method === 'GET') {
     const data = JSON.parse(fs.readFileSync(stokPath, 'utf8'));
     return res.status(200).json(data);
   }
 
-  const auth = req.headers.authorization;
   if (!auth || auth !== 'Bearer admin-secret-token') {
     return res.status(403).json({ message: 'Unauthorized' });
   }
