@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login — SimpleStock</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>Admin — SimpleStock</h1>
+    <a class="admin-link" href="/">Ke Toko</a>
+  </header>
+
+  <main class="wrap">
+    <div class="card login-card">
+      <h2>Login Admin</h2>
+      <form id="loginForm">
+        <input id="username" placeholder="Username" required autofocus />
+        <input id="password" type="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p id="msg" class="muted"></p>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      document.getElementById('msg').innerText = 'Processing...';
+      try {
+        const r = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const j = await r.json();
+        if (r.ok && j.token) {
+          localStorage.setItem('admin_token', j.token);
+          window.location.href = '/admin-panel.html';
+        } else {
+          document.getElementById('msg').innerText = j.message || 'Login gagal';
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('msg').innerText = 'Error koneksi';
+      }
+    });
+  </script>
+</body>
+</html>
