@@ -24,11 +24,11 @@ document.getElementById('loginForm').addEventListener('submit', async e=>{
   const password = document.getElementById('password').value;
 
   try {
-    const res = await fetch('/api/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username,password})
-    });
+    const res = await fetch('/api/login', {
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({username,password})
+});
     const j = await res.json();
     if(res.ok && j.token){
       localStorage.setItem('admin_token', j.token);
