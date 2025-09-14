@@ -1,152 +1,130 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Panel — SimpleStock</title>
-  <link rel="stylesheet" href="/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Panel</title>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header class="site-header">
-    <h1>Admin Panel</h1>
-    <div>
-      <a class="admin-link" href="/">Ke Toko</a>
-      <button id="logoutBtn" class="small danger" style="margin-left:12px">Logout</button>
-    </div>
-  </header>
+<header>
+  <h1>Admin Panel</h1>
+  <div>
+    <a href="/">Ke Toko</a>
+    <button id="logoutBtn">Logout</button>
+  </div>
+</header>
 
-  <main class="wrap">
-    <div class="admin-grid">
-      <section class="card left">
-        <h2>Tambah Produk</h2>
-        <form id="addForm">
-          <input id="add-name" placeholder="Nama produk" required>
-          <input id="add-price" type="number" placeholder="Harga" required>
-          <input id="add-stock" type="number" placeholder="Stok" required>
-          <input id="add-wa" placeholder="Nomor WhatsApp">
-          <textarea id="add-desc" placeholder="Deskripsi"></textarea>
-          <div style="display:flex;gap:8px;align-items:center">
-            <button type="submit">Tambah Produk</button>
-            <span class="muted">Scroll bila perlu</span>
-          </div>
-        </form>
+<main>
+  <section>
+    <h2>Tambah Produk</h2>
+    <form id="addForm">
+      <input id="add-name" placeholder="Nama produk" required>
+      <input id="add-price" type="number" placeholder="Harga" required>
+      <input id="add-stock" type="number" placeholder="Stok" required>
+      <input id="add-wa" placeholder="No. WhatsApp">
+      <textarea id="add-desc" placeholder="Deskripsi"></textarea>
+      <button type="submit">Tambah Produk</button>
+    </form>
+  </section>
 
-        <hr>
+  <section>
+    <h2>Tambah Admin</h2>
+    <form id="addUserForm">
+      <input id="new-user" placeholder="Username baru" required>
+      <input id="new-pass" placeholder="Password baru" required>
+      <button type="submit">Tambah Admin</button>
+      <p id="addUserMsg"></p>
+    </form>
+  </section>
 
-        <h3>Tambah Admin (plaintext)</h3>
-        <form id="addUserForm">
-          <input id="new-user" placeholder="Username baru" required>
-          <input id="new-pass" placeholder="Password baru" required>
-          <button type="submit">Tambah Admin</button>
-          <p id="addUserMsg" class="muted"></p>
-        </form>
-      </section>
+  <section>
+    <h2>Daftar Produk</h2>
+    <div id="list-wrap"></div>
+  </section>
+</main>
 
-      <section class="card right">
-        <h2>Daftar Produk</h2>
-        <div id="list-wrap" class="news-list admin-list"></div>
-      </section>
-    </div>
-  </main>
+<script>
+const tokenKey='admin_token';
+function getToken(){ return localStorage.getItem(tokenKey); }
+function clearToken(){ localStorage.removeItem(tokenKey); localStorage.removeItem('admin_user'); }
 
-  <script>
-    const tokenKey = 'admin_token';
-    function getToken(){ return localStorage.getItem(tokenKey); }
-    function clearToken(){ localStorage.removeItem(tokenKey); localStorage.removeItem('admin_user'); }
-    document.getElementById('logoutBtn').addEventListener('click', ()=>{ clearToken(); location.href='/admin-login'; });
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearToken();
+  window.location.href='/admin-login';
+});
 
-    async function authCheck(){
-      const t = getToken();
-      if (!t) return location.href='/admin-login';
-      const u = localStorage.getItem('admin_user');
-      if (!u) { clearToken(); return location.href='/admin-login'; }
-    }
+// cek login
+if(!getToken()) window.location.href='/admin-login';
 
-    async function loadList(){
-      const r = await fetch('/api/stok');
-      const arr = await r.json();
-      const wrap = document.getElementById('list-wrap');
-      wrap.innerHTML = '';
-      if (!arr.length) { wrap.innerHTML='<p class="muted">Belum ada produk.</p>'; return; }
-      arr.forEach(p=>{
-        const el=document.createElement('div');
-        el.className='news-card admin-card';
-        el.innerHTML=`
-          <h3>${escapeHtml(p.nama)}</h3>
-          <p class="news-meta">Rp${numberWithCommas(p.harga)} • Stok: <strong id="stock-${p.id}">${p.stock||0}</strong></p>
-          <p class="news-desc">${escapeHtml(p.deskripsi||'')}</p>
-          <p class="news-wa">📲 <a href="https://wa.me/${encodeURIComponent(p.wa||'')}" target="_blank">Chat</a></p>
-          <div class="row" style="margin-top:8px">
-            <button class="small" data-id="${p.id}" data-action="dec">-</button>
-            <button class="small" data-id="${p.id}" data-action="inc">+</button>
-            <button class="small danger" data-id="${p.id}" data-action="del">Hapus</button>
-          </div>
-        `;
-        wrap.appendChild(el);
-      });
+async function loadList(){
+  const res=await fetch('/api/stok');
+  const arr=await res.json();
+  const wrap=document.getElementById('list-wrap');
+  wrap.innerHTML='';
+  if(!arr.length){ wrap.innerHTML='<p>Belum ada produk.</p>'; return; }
+  arr.forEach(p=>{
+    const el=document.createElement('div');
+    el.innerHTML=`
+      <h3>${p.nama}</h3>
+      <p>Rp${p.harga} • Stok: ${p.stock}</p>
+      <p>${p.deskripsi||''}</p>
+      <p>WA: <a href="https://wa.me/${p.wa||''}" target="_blank">Chat</a></p>
+      <button data-id="${p.id}" data-action="del">Hapus</button>
+    `;
+    wrap.appendChild(el);
+  });
 
-      wrap.querySelectorAll('button').forEach(btn=>{
-        btn.addEventListener('click', async ()=>{
-          const id=Number(btn.dataset.id);
-          const act=btn.dataset.action;
-          if(act==='del'){ if(!confirm('Hapus produk?')) return; await doRemove(id); } 
-          else await doEdit(id, act==='inc'?1:-1);
-          loadList();
-        });
-      });
-    }
-
-    document.getElementById('addForm').addEventListener('submit', async e=>{
-      e.preventDefault();
-      const nama=document.getElementById('add-name').value.trim();
-      const harga=Number(document.getElementById('add-price').value);
-      const stock=Number(document.getElementById('add-stock').value);
-      const wa=document.getElementById('add-wa').value.trim();
-      const deskripsi=document.getElementById('add-desc').value.trim();
-
-      const res=await fetch('/api/stok',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
-        body:JSON.stringify({nama,harga,stock,wa,deskripsi})
-      });
-      if(res.ok){ document.getElementById('addForm').reset(); loadList(); } 
-      else alert((await res.json()).message||'Gagal menambah');
-    });
-
-    document.getElementById('addUserForm').addEventListener('submit', async e=>{
-      e.preventDefault();
-      const user=document.getElementById('new-user').value.trim();
-      const pass=document.getElementById('new-pass').value;
-      const res=await fetch('/api/users',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
-        body:JSON.stringify({user,pass})
-      });
-      const j=await res.json();
-      document.getElementById('addUserMsg').innerText=j.message||(res.ok?'OK':'Gagal');
-      if(res.ok) document.getElementById('addUserForm').reset();
-    });
-
-    async function doEdit(id,delta){
-      return fetch('/api/stok',{
-        method:'PUT',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
-        body:JSON.stringify({id,delta})
-      });
-    }
-
-    async function doRemove(id){
-      return fetch('/api/stok',{
+  wrap.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id=btn.dataset.id;
+      await fetch('/api/stok',{
         method:'DELETE',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
         body:JSON.stringify({id})
       });
-    }
+      loadList();
+    });
+  });
+}
 
-    function escapeHtml(s){ if(!s)return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function numberWithCommas(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+// tambah produk
+document.getElementById('addForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const body={
+    nama: document.getElementById('add-name').value,
+    harga: Number(document.getElementById('add-price').value),
+    stock: Number(document.getElementById('add-stock').value),
+    wa: document.getElementById('add-wa').value,
+    deskripsi: document.getElementById('add-desc').value
+  };
+  await fetch('/api/stok',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+    body:JSON.stringify(body)
+  });
+  e.target.reset();
+  loadList();
+});
 
-    (async ()=>{ await authCheck(); await loadList(); })();
-  </script>
+// tambah admin
+document.getElementById('addUserForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const body={
+    user: document.getElementById('new-user').value,
+    pass: document.getElementById('new-pass').value
+  };
+  const res=await fetch('/api/users',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+    body:JSON.stringify(body)
+  });
+  const j=await res.json();
+  document.getElementById('addUserMsg').innerText=j.message||'OK';
+  e.target.reset();
+});
+
+loadList();
+</script>
 </body>
-  </html>
+</html>
