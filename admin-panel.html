@@ -55,7 +55,7 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
 });
 
 // cek login
-if(!getToken()) window.location.href='/admin-login';
+if(!getToken()) window.location.href='/admin-login.html';
 
 async function loadList(){
   const res=await fetch('/api/stok');
